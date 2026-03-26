@@ -2,24 +2,26 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
-// Get all orders
+// Get all orders (with customer phone from users table)
 router.get('/', async (req, res) => {
     try {
         const [orders] = await db.query(`
             SELECT 
-                id, 
-                user_email, 
-                item_total, 
-                delivery_charge, 
-                handling_charge, 
-                grand_total, 
-                status, 
-                created_at,
-                payment_method,
-                payment_details,
-                delivery_address
-            FROM orders
-            ORDER BY created_at DESC
+                o.id, 
+                o.user_email, 
+                u.phone AS customer_phone,
+                o.item_total, 
+                o.delivery_charge, 
+                o.handling_charge, 
+                o.grand_total, 
+                o.status, 
+                o.created_at,
+                o.payment_method,
+                o.payment_details,
+                o.delivery_address
+            FROM orders o
+            LEFT JOIN users u ON o.user_email = u.email
+            ORDER BY o.created_at DESC
         `);
         res.json(orders);
     } catch (error) {

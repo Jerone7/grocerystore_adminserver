@@ -7,25 +7,30 @@ const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
 const bannerRoutes = require('./routes/banners');
+const authMiddleware = require('./middleware/authMiddleware');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 app.use(cors());
 app.use(express.json());
 
-// Routes
-console.log('Registering /api/orders...');
+// Public route — no auth required
 app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/categories', require('./routes/categories'));
-app.use('/api/banners', bannerRoutes);
+
+// Protected routes — require valid JWT
+app.use('/api/products', authMiddleware, productRoutes);
+app.use('/api/orders', authMiddleware, orderRoutes);
+app.use('/api/categories', authMiddleware, require('./routes/categories'));
+app.use('/api/banners', authMiddleware, bannerRoutes);
 
 app.get('/', (req, res) => {
     res.send('Grocery Store Admin API is running');
 });
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Admin server running on port ${PORT}`);
+    if (!process.env.JWT_SECRET) {
+        console.warn('WARNING: JWT_SECRET is not set in .env — using insecure default!');
+    }
 });
